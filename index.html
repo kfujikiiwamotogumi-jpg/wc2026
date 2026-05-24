@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="W杯2026">
+<meta name="theme-color" content="#0a0a1a">
+<title>W杯 2026 日程</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#05050d;--bg2:#0a0f1e;--surface:rgba(255,255,255,0.12);
+  --border:rgba(255,255,255,0.2);--text:#ffffff;--muted:rgba(255,255,255,0.65);
+  --gold:#ffd700;--red:#c41e3a;--blue:#4285f4;--green:#1a9e5c;
+  --safe-top:env(safe-area-inset-top);--safe-bot:env(safe-area-inset-bottom);
+}
+html,body{height:100%;background:#05050d;color:var(--text);font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;overflow-x:hidden}
+
+/* HEADER */
+#header{
+  background:linear-gradient(135deg,#9b0000,#c41e3a);
+  padding:calc(var(--safe-top) + 14px) 16px 14px;
+  text-align:center;
+  position:sticky;top:0;z-index:100;
+  border-bottom:2px solid var(--gold);
+}
+#header h1{font-size:18px;font-weight:800;color:#fff;letter-spacing:1px}
+#header p{font-size:11px;color:rgba(255,255,255,0.7);margin-top:3px}
+
+/* SEARCH BAR */
+#searchBar{
+  padding:12px 16px 6px;
+  position:sticky;top:calc(var(--safe-top) + 60px);z-index:90;
+  background:#05050d;
+}
+#searchInput{
+  width:100%;background:rgba(255,255,255,0.08);border:1px solid var(--border);
+  border-radius:24px;padding:10px 16px;color:var(--text);font-size:14px;
+  outline:none;
+}
+#searchInput::placeholder{color:var(--muted)}
+#searchInput:focus{border-color:rgba(255,215,0,0.4);background:rgba(255,255,255,0.1)}
+
+/* TEAM CHIPS */
+#teamRow{
+  padding:8px 16px;overflow-x:auto;display:flex;gap:6px;
+  scrollbar-width:none;position:sticky;top:calc(var(--safe-top) + 110px);z-index:89;
+  background:#05050d;border-bottom:1px solid var(--border);
+}
+#teamRow::-webkit-scrollbar{display:none}
+.chip{
+  flex-shrink:0;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;
+  border:1px solid var(--border);background:var(--surface);color:var(--muted);
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.chip.active{background:rgba(255,215,0,0.15);color:var(--gold);border-color:rgba(255,215,0,0.4)}
+.chip.japan{border-color:rgba(196,30,58,0.4);color:#ff8a80}
+.chip.japan.active{background:rgba(196,30,58,0.2);color:#ff8a80;border-color:rgba(196,30,58,0.6)}
+
+/* STAGE GROUPS */
+#list{padding:12px 16px calc(var(--safe-bot) + 80px)}
+.stage-header{
+  display:flex;align-items:center;gap:8px;
+  margin:20px 0 8px;padding-bottom:8px;
+  border-bottom:2px solid currentColor;
+  font-size:12px;font-weight:700;letter-spacing:1px;
+}
+.stage-dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
+.stage-count{margin-left:auto;font-size:10px;opacity:.5}
+
+/* MATCH CARD */
+.match{
+  display:flex;align-items:center;gap:10px;
+  background:#111122;border:1px solid rgba(255,255,255,0.18);
+  border-radius:12px;padding:11px 12px;margin-bottom:6px;
+  transition:background .15s;
+}
+.match.japan-match{
+  background:#1c0810;border-color:rgba(220,40,60,0.55);
+}
+.match-time{flex-shrink:0;text-align:center;min-width:48px}
+.match-date{font-size:11px;color:var(--muted);line-height:1}
+.match-weekday{font-size:10px;color:var(--muted);line-height:1;margin-top:1px}
+.match-hour{font-size:15px;font-weight:800;color:var(--gold);line-height:1;margin-top:3px}
+.match-jst{font-size:9px;color:rgba(255,255,255,0.3);margin-top:1px}
+.divider{width:1px;height:36px;background:var(--border);flex-shrink:0}
+.match-info{flex:1;min-width:0}
+.match-teams{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ffffff}
+.match-teams.jp{color:#ffb3b3;font-weight:700}
+.match-venue{font-size:10px;color:rgba(255,255,255,0.6);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.match-group{
+  display:inline-block;margin-left:6px;
+  font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;
+  background:rgba(255,255,255,0.08);color:var(--muted);vertical-align:middle;
+}
+.jp-flag{font-size:16px;flex-shrink:0}
+
+/* EMPTY */
+#empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
+
+/* BOTTOM NAV */
+#bottomNav{
+  position:fixed;bottom:0;left:0;right:0;
+  padding:10px 16px calc(var(--safe-bot) + 10px);
+  background:rgba(5,5,13,0.97);backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  display:flex;gap:8px;z-index:200;
+}
+.nav-btn{
+  flex:1;padding:12px 6px;border-radius:10px;font-size:12px;font-weight:700;
+  border:none;cursor:pointer;transition:all .15s;
+}
+.nav-all{background:linear-gradient(135deg,var(--blue),#1a73e8);color:#fff}
+.nav-japan{background:linear-gradient(135deg,var(--red),#8b0000);color:#fff}
+
+/* MODAL */
+#modal{
+  display:none;position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);
+  align-items:flex-end;
+}
+#modal.show{display:flex}
+#modalBox{
+  background:#0d0d20;border-radius:20px 20px 0 0;
+  border-top:1px solid var(--border);
+  width:100%;padding:20px 20px calc(var(--safe-bot) + 20px);
+  max-height:85vh;overflow-y:auto;
+}
+#modalTitle{font-size:16px;font-weight:800;margin-bottom:4px}
+#modalSub{font-size:12px;color:var(--muted);margin-bottom:16px}
+.modal-match{
+  display:flex;align-items:center;gap:10px;
+  background:#111122;border:1px solid rgba(255,255,255,0.18);
+  border-radius:10px;padding:12px;margin-bottom:8px;
+}
+.modal-close{
+  width:100%;padding:14px;margin-top:8px;
+  background:rgba(255,255,255,0.08);border:1px solid var(--border);
+  border-radius:12px;color:var(--text);font-size:14px;font-weight:600;cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>⚽ FIFA ワールドカップ 2026</h1>
+  <p>全104試合 · 日本時間表示</p>
+</div>
+
+<div id="searchBar">
+  <input id="searchInput" type="search" placeholder="🔍 チーム名・会場で検索..." oninput="applyFilter()">
+</div>
+
+<div id="teamRow"></div>
+<div id="list"></div>
+<div id="empty" style="display:none">該当する試合がありません</div>
+
+<div id="bottomNav">
+  <button class="nav-btn nav-all" onclick="selectTeam('all')">全104試合</button>
+  <button class="nav-btn nav-japan" onclick="selectTeam('日本')">🇯🇵 日本代表</button>
+</div>
+
+<div id="modal">
+  <div id="modalBox">
+    <div id="modalTitle"></div>
+    <div id="modalSub"></div>
+    <div id="modalMatches"></div>
+    <button class="modal-close" onclick="closeModal()">閉じる</button>
+  </div>
+</div>
+
+<script>
+const WEEKDAYS = ['日','月','火','水','木','金','土'];
+
+function etToJst(dateStr, timeStr) {
+  const y = parseInt(dateStr.slice(0,4)), mo = parseInt(dateStr.slice(4,6))-1;
+  const d = parseInt(dateStr.slice(6,8)), h = parseInt(timeStr.slice(0,2)), mn = parseInt(timeStr.slice(2,4));
+  const et = new Date(Date.UTC(y, mo, d, h+4, mn));
+  const jst = new Date(et.getTime() + 9*3600000);
+  const pad = n => String(n).padStart(2,'0');
+  return {
+    date: `${jst.getUTCFullYear()}${pad(jst.getUTCMonth()+1)}${pad(jst.getUTCDate())}`,
+    time: `${pad(jst.getUTCHours())}${pad(jst.getUTCMinutes())}`,
+    weekday: WEEKDAYS[jst.getUTCDay()]
+  };
+}
+
+const RAW = [
+  {home:"メキシコ",away:"南アフリカ",group:"A",stage:"GL第1節",venue:"エスタディオ・アステカ",city:"メキシコシティ",etDate:"20260611",etTime:"1500"},
+  {home:"韓国",away:"チェコ",group:"A",stage:"GL第1節",venue:"エスタディオ・アクロン",city:"サポパン",etDate:"20260611",etTime:"2200"},
+  {home:"カナダ",away:"ボスニア・ヘルツェゴビナ",group:"B",stage:"GL第1節",venue:"BMOフィールド",city:"トロント",etDate:"20260612",etTime:"1500"},
+  {home:"アメリカ",away:"パラグアイ",group:"D",stage:"GL第1節",venue:"SoFiスタジアム",city:"ロサンゼルス",etDate:"20260612",etTime:"2100"},
+  {home:"カタール",away:"スイス",group:"B",stage:"GL第1節",venue:"リーバイス・スタジアム",city:"サンタクララ",etDate:"20260613",etTime:"1500"},
+  {home:"ブラジル",away:"モロッコ",group:"C",stage:"GL第1節",venue:"メットライフ・スタジアム",city:"ニュージャージー",etDate:"20260613",etTime:"1800"},
+  {home:"ハイチ",away:"スコットランド",group:"C",stage:"GL第1節",venue:"ジレット・スタジアム",city:"フォックスボロ",etDate:"20260613",etTime:"2100"},
+  {home:"オーストラリア",away:"トルコ",group:"D",stage:"GL第1節",venue:"BCプレイス",city:"バンクーバー",etDate:"20260614",etTime:"0000"},
+  {home:"ドイツ",away:"キュラソー",group:"E",stage:"GL第1節",venue:"NRGスタジアム",city:"ヒューストン",etDate:"20260614",etTime:"1300"},
+  {home:"オランダ",away:"日本",group:"F",stage:"GL第1節",venue:"AT&Tスタジアム",city:"ダラス",etDate:"20260614",etTime:"1600"},
+  {home:"コートジボワール",away:"エクアドル",group:"E",stage:"GL第1節",venue:"リンカーン・フィナンシャル・フィールド",city:"フィラデルフィア",etDate:"20260614",etTime:"1900"},
+  {home:"スウェーデン",away:"チュニジア",group:"F",stage:"GL第1節",venue:"エスタディオBBVA",city:"モンテレイ",etDate:"20260614",etTime:"2200"},
+  {home:"スペイン",away:"カーボベルデ",group:"H",stage:"GL第1節",venue:"メルセデス・ベンツ・スタジアム",city:"アトランタ",etDate:"20260615",etTime:"1200"},
+  {home:"ベルギー",away:"エジプト",group:"G",stage:"GL第1節",venue:"ルーメン・フィールド",city:"シアトル",etDate:"20260615",etTime:"1500"},
+  {home:"サウジアラビア",away:"ウルグアイ",group:"H",stage:"GL第1節",venue:"ハードロック・スタジアム",city:"マイアミ",etDate:"20260615",etTime:"1800"},
+  {home:"イラン",away:"ニュージーランド",group:"G",stage:"GL第1節",venue:"SoFiスタジアム",city:"ロサンゼルス",etDate:"20260615",etTime:"2100"},
+  {home:"フランス",away:"セネガル",group:"I",stage:"GL第1節",venue:"メットライフ・スタジアム",city:"ニュージャージー",etDate:"20260616",etTime:"1500"},
+  {home:"イラク",away:"ノルウェー",group:"I",stage:"GL第1節",venue:"ジレット・スタジアム",city:"フォックスボロ",etDate:"20260616",etTime:"1800"},
+  {home:"アルゼンチン",away:"アルジェリア",group:"J",stage:"GL第1節",venue:"アローヘッド・スタジアム",city:"カンザスシティ",etDate:"20260616",etTime:"2100"},
+  {home:"オーストリア",away:"ヨルダン",group:"J",stage:"GL第1節",venue:"リーバイス・スタジアム",city:"サンタクララ",etDate:"20260617",etTime:"0000"},
+  {home:"ポルトガル",away:"DRコンゴ",group:"K",stage:"GL第1節",venue:"NRGスタジアム",city:"ヒューストン",etDate:"20260617",etTime:"1300"},
+  {home:"イングランド",away:"クロアチア",group:"L",stage:"GL第1節",venue:"AT&Tスタジアム",city:"ダラス",etDate:"20260617",etTime:"1600"},
+  {home:"ガーナ",away:"パナマ",group:"L",stage:"GL第1節",venue:"BMOフィールド",city:"トロント",etDate:"20260617",etTime:"1900"},
+  {home:"ウズベキスタン",away:"コロンビア",group:"K",stage:"GL第1節",venue:"エスタディオ・アステカ",city:"メキシコシティ",etDate:"20260617",etTime:"2200"},
+  {home:"チェコ",away:"南アフリカ",group:"A",stage:"GL第2節",venue:"メルセデス・ベンツ・スタジアム",city:"アトランタ",etDate:"20260618",etTime:"1200"},
+  {home:"スイス",away:"ボスニア・ヘルツェゴビナ",group:"B",stage:"GL第2節",venue:"SoFiスタジアム",city:"ロサンゼルス",etDate:"20260618",etTime:"1500"},
+  {home:"カナダ",away:"カタール",group:"B",stage:"GL第2節",venue:"BCプレイス",city:"バンクーバー",etDate:"20260618",etTime:"1800"},
+  {home:"メキシコ",away:"韓国",group:"A",stage:"GL第2節",venue:"エスタディオ・アクロン",city:"サポパン",etDate:"20260618",etTime:"2100"},
+  {home:"アメリカ",away:"オーストラリア",group:"D",stage:"GL第2節",venue:"ルーメン・フィールド",city:"シアトル",etDate:"20260619",etTime:"1500"},
+  {home:"スコットランド",away:"モロッコ",group:"C",stage:"GL第2節",venue:"ジレット・スタジアム",city:"フォックスボロ",etDate:"20260619",etTime:"1800"},
+  {home:"ブラジル",away:"ハイチ",group:"C",stage:"GL第2節",venue:"リンカーン・フィナンシャル・フィールド",city:"フィラデルフィア",etDate:"20260619",etTime:"2030"},
+  {home:"トルコ",away:"パラグアイ",group:"D",stage:"GL第2節",venue:"リーバイス・スタジアム",city:"サンタクララ",etDate:"20260619",etTime:"2300"},
+  {home:"オランダ",away:"スウェーデン",group:"F",stage:"GL第2節",venue:"NRGスタジアム",city:"ヒューストン",etDate:"20260620",etTime:"1300"},
+  {home:"ドイツ",away:"コートジボワール",group:"E",stage:"GL第2節",venue:"BMOフィールド",city:"トロント",etDate:"20260620",etTime:"1600"},
+  {home:"エクアドル",away:"キュラソー",group:"E",stage:"GL第2節",venue:"アローヘッド・スタジアム",city:"カンザスシティ",etDate:"20260620",etTime:"2000"},
+  {home:"チュニジア",away:"日本",group:"F",stage:"GL第2節",venue:"エスタディオBBVA",city:"モンテレイ",etDate:"20260621",etTime:"0000"},
+  {home:"スペイン",away:"サウジアラビア",group:"H",stage:"GL第2節",venue:"メルセデス・ベンツ・スタジアム",city:"アトランタ",etDate:"20260621",etTime:"1200"},
+  {home:"ベルギー",away:"イラン",group:"G",stage:"GL第2節",venue:"SoFiスタジアム",city:"ロサンゼルス",etDate:"20260621",etTime:"1500"},
+  {home:"ウルグアイ",away:"カーボベルデ",group:"H",stage:"GL第2節",venue:"ハードロック・スタジアム",city:"マイアミ",etDate:"20260621",etTime:"1800"},
+  {home:"ニュージーランド",away:"エジプト",group:"G",stage:"GL第2節",venue:"BCプレイス",city:"バンクーバー",etDate:"20260621",etTime:"2100"},
+  {home:"アルゼンチン",away:"オーストリア",group:"J",stage:"GL第2節",venue:"AT&Tスタジアム",city:"ダラス",etDate:"20260622",etTime:"1300"},
+  {home:"フランス",away:"イラク",group:"I",stage:"GL第2節",venue:"リンカーン・フィナンシャル・フィールド",city:"フィラデルフィア",etDate:"20260622",etTime:"1700"},
+  {home:"ノルウェー",away:"セネガル",group:"I",stage:"GL第2節",venue:"メットライフ・スタジアム",city:"ニュージャージー",etDate:"20260622",etTime:"2000"},
+  {home:"ヨルダン",away:"アルジェリア",group:"J",stage:"GL第2節",venue:"リーバイス・スタジアム",city:"サンタクララ",etDate:"20260622",etTime:"2300"},
+  {home:"ポルトガル",away:"ウズベキスタン",group:"K",stage:"GL第2節",venue:"NRGスタジアム",city:"ヒューストン",etDate:"20260623",etTime:"1300"},
+  {home:"イングランド",away:"ガーナ",group:"L",stage:"GL第2節",venue:"ジレット・スタジアム",city:"フォックスボロ",etDate:"20260623",etTime:"1600"},
+  {home:"パナマ",away:"クロアチア",group:"L",stage:"GL第2節",venue:"BMOフィールド",city:"トロント",etDate:"20260623",etTime:"1900"},
+  {home:"コロンビア",away:"DRコンゴ",group:"K",stage:"GL第2節",venue:"エスタディオ・アクロン",city:"サポパン",etDate:"20260623",etTime:"2200"},
+  {home:"スイス",away:"カナダ",group:"B",stage:"GL第3節",venue:"BCプレイス",city:"バンクーバー",etDate:"20260624",etTime:"1500"},
+  {home:"ボスニア・ヘルツェゴビナ",away:"カタール",group:"B",stage:"GL第3節",venue:"ルーメン・フィールド",city:"シアトル",etDate:"20260624",etTime:"1500"},
+  {home:"スコットランド",away:"ブラジル",group:"C",stage:"GL第3節",venue:"ハードロック・スタジアム",city:"マイアミ",etDate:"20260624",etTime:"1800"},
+  {home:"モロッコ",away:"ハイチ",group:"C",stage:"GL第3節",venue:"メルセデス・ベンツ・スタジアム",city:"アトランタ",etDate:"20260624",etTime:"1800"},
+  {home:"チェコ",away:"メキシコ",group:"A",stage:"GL第3節",venue:"エスタディオ・アステカ",city:"メキシコシティ",etDate:"20260624",etTime:"2100"},
+  {home:"南アフリカ",away:"韓国",group:"A",stage:"GL第3節",venue:"エスタディオBBVA",city:"モンテレイ",etDate:"20260624",etTime:"2100"},
+  {home:"キュラソー",away:"コートジボワール",group:"E",stage:"GL第3節",venue:"リンカーン・フィナンシャル・フィールド",city:"フィラデルフィア",etDate:"20260625",etTime:"1600"},
+  {home:"エクアドル",away:"ドイツ",group:"E",stage:"GL第3節",venue:"メットライフ・スタジアム",city:"ニュージャージー",etDate:"20260625",etTime:"1600"},
+  {home:"日本",away:"スウェーデン",group:"F",stage:"GL第3節",venue:"AT&Tスタジアム",city:"ダラス",etDate:"20260625",etTime:"1900"},
+  {home:"チュニジア",away:"オランダ",group:"F",stage:"GL第3節",venue:"アローヘッド・スタジアム",city:"カンザスシティ",etDate:"20260625",etTime:"1900"},
+  {home:"トルコ",away:"アメリカ",group:"D",stage:"GL第3節",venue:"SoFiスタジアム",city:"ロサンゼルス",etDate:"20260625",etTime:"2200"},
+  {home:"パラグアイ",away:"オーストラリア",group:"D",stage:"GL第3節",venue:"リーバイス・スタジアム",city:"サンタクララ",etDate:"20260625",etTime:"2200"},
+  {home:"ノルウェー",away:"フランス",group:"I",stage:"GL第3節",venue:"ジレット・スタジアム",city:"フォックスボロ",etDate:"20260626",etTime:"1500"},
+  {home:"セネガル",away:"イラク",group:"I",stage:"GL第3節",venue:"BMOフィールド",city:"トロント",etDate:"20260626",etTime:"1500"},
+  {home:"カーボベルデ",away:"サウジアラビア",group:"H",stage:"GL第3節",venue:"NRGスタジアム",city:"ヒューストン",etDate:"20260626",etTime:"2000"},
+  {home:"ウルグアイ",away:"スペイン",group:"H",stage:"GL第3節",venue:"エスタディオ・アクロン",city:"サポパン",etDate:"20260626",etTime:"2000"},
+  {home:"エジプト",away:"イラン",group:"G",stage:"GL第3節",venue:"ルーメン・フィールド",city:"シアトル",etDate:"20260626",etTime:"2300"},
+  {home:"ニュージーランド",away:"ベルギー",group:"G",stage:"GL第3節",venue:"BCプレイス",city:"バンクーバー",etDate:"20260626",etTime:"2300"},
+  {home:"パナマ",away:"イングランド",group:"L",stage:"GL第3節",venue:"メットライフ・スタジアム",city:"ニュージャージー",etDate:"20260627",etTime:"1700"},
+  {home:"クロアチア",away:"ガーナ",group:"L",stage:"GL第3節",venue:"リンカーン・フィナンシャル・フィールド",city:"フィラデルフィア",etDate:"20260627",etTime:"1700"},
+  {home:"コロンビア",away:"ポルトガル",group:"K",stage:"GL第3節",venue:"ハードロック・スタジアム",city:"マイアミ",etDate:"20260627",etTime:"1930"},
+  {home:"DRコンゴ",away:"ウズベキスタン",group:"K",stage:"GL第3節",venue:"メルセデス・ベンツ・スタジアム",city:"アトランタ",etDate:"20260627",etTime:"1930"},
+  {home:"アルジェリア",away:"オーストリア",group:"J",stage:"GL第3節",venue:"アローヘッド・スタジアム",city:"カンザスシティ",etDate:"20260627",etTime:"2200"},
+  {home:"ヨルダン",away:"アルゼンチン",group:"J",stage:"GL第3節",venue:"AT&Tスタジアム",city:"ダラス",etDate:"20260627",etTime:"2200"},
+  {home:"2位A",away:"2位B",group:"",stage:"R32",venue:"SoFiスタジアム",city:"ロサンゼルス",etDate:"20260628",etTime:"1500"},
+  {home:"1位C",away:"2位F",group:"",stage:"R32",venue:"NRGスタジアム",city:"ヒューストン",etDate:"20260629",etTime:"1300"},
+  {home:"1位E",away:"3位",group:"",stage:"R32",venue:"ジレット・スタジアム",city:"フォックスボロ",etDate:"20260629",etTime:"1630"},
+  {home:"1位F",away:"2位C",group:"",stage:"R32",venue:"エスタディオBBVA",city:"モンテレイ",etDate:"20260629",etTime:"2100"},
+  {home:"2位E",away:"2位I",group:"",stage:"R32",venue:"AT&Tスタジアム",city:"ダラス",etDate:"20260630",etTime:"1300"},
+  {home:"1位I",away:"3位",group:"",stage:"R32",venue:"メットライフ・スタジアム",city:"ニュージャージー",etDate:"20260630",etTime:"1700"},
+  {home:"1位A",away:"3位",group:"",stage:"R32",venue:"エスタディオ・アステカ",city:"メキシコシティ",etDate:"20260630",etTime:"2100"},
+  {home:"1位L",away:"3位",group:"",stage:"R32",venue:"メルセデス・ベンツ・スタジアム",city:"アトランタ",etDate:"20260701",etTime:"1200"},
+  {home:"1位G",away:"3位",group:"",stage:"R32",venue:"ルーメン・フィールド",city:"シアトル",etDate:"20260701",etTime:"1600"},
+  {home:"1位D",away:"3位",group:"",stage:"R32",venue:"リーバイス・スタジアム",city:"サンタクララ",etDate:"20260701",etTime:"2000"},
+  {home:"1位H",away:"2位J",group:"",stage:"R32",venue:"SoFiスタジアム",city:"ロサンゼルス",etDate:"20260702",etTime:"1500"},
+  {home:"2位K",away:"2位L",group:"",stage:"R32",venue:"BMOフィールド",city:"トロント",etDate:"20260702",etTime:"1900"},
+  {home:"1位B",away:"3位",group:"",stage:"R32",venue:"BCプレイス",city:"バンクーバー",etDate:"20260702",etTime:"2300"},
+  {home:"2位D",away:"2位G",group:"",stage:"R32",venue:"AT&Tスタジアム",city:"ダラス",etDate:"20260703",etTime:"1400"},
+  {home:"1位J",away:"2位H",group:"",stage:"R32",venue:"ハードロック・スタジアム",city:"マイアミ",etDate:"20260703",etTime:"1800"},
+  {home:"1位K",away:"3位",group:"",stage:"R32",venue:"アローヘッド・スタジアム",city:"カンザスシティ",etDate:"20260703",etTime:"2130"},
+  {home:"R32勝者",away:"R32勝者",group:"",stage:"R16",venue:"NRGスタジアム",city:"ヒューストン",etDate:"20260704",etTime:"1300"},
+  {home:"R32勝者",away:"R32勝者",group:"",stage:"R16",venue:"リンカーン・フィナンシャル・フィールド",city:"フィラデルフィア",etDate:"20260704",etTime:"1700"},
+  {home:"R32勝者",away:"R32勝者",group:"",stage:"R16",venue:"メットライフ・スタジアム",city:"ニュージャージー",etDate:"20260705",etTime:"1600"},
+  {home:"R32勝者",away:"R32勝者",group:"",stage:"R16",venue:"エスタディオ・アステカ",city:"メキシコシティ",etDate:"20260705",etTime:"2000"},
+  {home:"R32勝者",away:"R32勝者",group:"",stage:"R16",venue:"AT&Tスタジアム",city:"ダラス",etDate:"20260706",etTime:"1500"},
+  {home:"R32勝者",away:"R32勝者",group:"",stage:"R16",venue:"ルーメン・フィールド",city:"シアトル",etDate:"20260706",etTime:"2000"},
+  {home:"R32勝者",away:"R32勝者",group:"",stage:"R16",venue:"メルセデス・ベンツ・スタジアム",city:"アトランタ",etDate:"20260707",etTime:"1200"},
+  {home:"R32勝者",away:"R32勝者",group:"",stage:"R16",venue:"BCプレイス",city:"バンクーバー",etDate:"20260707",etTime:"1600"},
+  {home:"QF勝者",away:"QF勝者",group:"",stage:"QF",venue:"ジレット・スタジアム",city:"フォックスボロ",etDate:"20260709",etTime:"1600"},
+  {home:"QF勝者",away:"QF勝者",group:"",stage:"QF",venue:"SoFiスタジアム",city:"ロサンゼルス",etDate:"20260710",etTime:"1500"},
+  {home:"QF勝者",away:"QF勝者",group:"",stage:"QF",venue:"ハードロック・スタジアム",city:"マイアミ",etDate:"20260711",etTime:"1700"},
+  {home:"QF勝者",away:"QF勝者",group:"",stage:"QF",venue:"アローヘッド・スタジアム",city:"カンザスシティ",etDate:"20260711",etTime:"2100"},
+  {home:"SF勝者",away:"SF勝者",group:"",stage:"SF",venue:"AT&Tスタジアム",city:"ダラス",etDate:"20260714",etTime:"1500"},
+  {home:"SF勝者",away:"SF勝者",group:"",stage:"SF",venue:"メルセデス・ベンツ・スタジアム",city:"アトランタ",etDate:"20260715",etTime:"1500"},
+  {home:"3位",away:"3位",group:"",stage:"3位決定戦",venue:"ハードロック・スタジアム",city:"マイアミ",etDate:"20260718",etTime:"1700"},
+  {home:"決勝",away:"決勝",group:"",stage:"決勝",venue:"メットライフ・スタジアム（NY）",city:"ニュージャージー",etDate:"20260719",etTime:"1500"},
+];
+
+const STAGE_ORDER = ["GL第1節","GL第2節","GL第3節","R32","R16","QF","SF","3位決定戦","決勝"];
+const STAGE_LABELS = {"GL第1節":"グループステージ 第1節","GL第2節":"グループステージ 第2節","GL第3節":"グループステージ 第3節","R32":"ラウンド・オブ・32","R16":"ラウンド・オブ・16","QF":"準々決勝","SF":"準決勝","3位決定戦":"3位決定戦","決勝":"🏆 決勝"};
+const STAGE_COLORS = {"GL第1節":"#1a9e5c","GL第2節":"#1a9e5c","GL第3節":"#1a9e5c","R32":"#3a7de8","R16":"#3a7de8","QF":"#9b59b6","SF":"#e67e22","3位決定戦":"#7f8c8d","決勝":"#c41e3a"};
+
+const MATCHES = RAW.map((m,i) => {
+  const j = etToJst(m.etDate, m.etTime);
+  return {...m, id:i+1, jDate:j.date, jTime:j.time, jDay:j.weekday};
+});
+
+// Extract all unique team names
+const ALL_TEAMS = [...new Set(MATCHES.flatMap(m=>[m.home,m.away]).filter(t=>!t.includes('位')&&!t.includes('勝者')&&!t.includes('決勝')&&!t.includes('位決定')&&!t.includes('SF')&&!t.includes('QF')&&!t.includes('R')))].sort();
+
+let currentTeam = 'all';
+let searchText = '';
+
+function buildTeamChips() {
+  const row = document.getElementById('teamRow');
+  const allChip = `<div class="chip active" id="chip-all" onclick="selectTeam('all')">すべて</div>`;
+  const jpChip = `<div class="chip japan" id="chip-日本" onclick="selectTeam('日本')">🇯🇵 日本</div>`;
+  const teamChips = ALL_TEAMS.filter(t=>t!=='日本').map(t=>`<div class="chip" id="chip-${t}" onclick="selectTeam('${t}')">${t}</div>`).join('');
+  row.innerHTML = allChip + jpChip + teamChips;
+}
+
+function selectTeam(team) {
+  currentTeam = team;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  const el = document.getElementById('chip-'+team);
+  if(el) el.classList.add('active');
+  searchText = '';
+  document.getElementById('searchInput').value = '';
+  applyFilter();
+}
+
+function applyFilter() {
+  searchText = document.getElementById('searchInput').value.trim().toLowerCase();
+  if(searchText) {
+    currentTeam = 'all';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    document.getElementById('chip-all').classList.add('active');
+  }
+  renderList();
+}
+
+function getFiltered() {
+  return MATCHES.filter(m => {
+    if(currentTeam !== 'all' && m.home !== currentTeam && m.away !== currentTeam) return false;
+    if(searchText && !m.home.toLowerCase().includes(searchText) && !m.away.toLowerCase().includes(searchText) && !m.venue.toLowerCase().includes(searchText)) return false;
+    return true;
+  });
+}
+
+function matchCard(m, mini=false) {
+  const isJp = m.home==='日本'||m.away==='日本';
+  const dateStr = `${parseInt(m.jDate.slice(4,6))}月${parseInt(m.jDate.slice(6,8))}日`;
+  const timeStr = `${m.jTime.slice(0,2)}:${m.jTime.slice(2,4)}`;
+  const groupBadge = m.group ? `<span class="match-group">G${m.group}</span>` : '';
+  return `
+  <div class="match${isJp?' japan-match':''}">
+    <div class="match-time">
+      <div class="match-date">${dateStr}</div>
+      <div class="match-weekday">${m.jDay}曜日</div>
+      <div class="match-hour">${timeStr}</div>
+      <div class="match-jst">JST</div>
+    </div>
+    <div class="divider"></div>
+    <div class="match-info">
+      <div class="match-teams${isJp?' jp':''}">${m.home} vs ${m.away}${groupBadge}</div>
+      <div class="match-venue">${m.venue}・${m.city}</div>
+    </div>
+    ${isJp?'<div class="jp-flag">🇯🇵</div>':''}
+  </div>`;
+}
+
+function renderList() {
+  const filtered = getFiltered();
+  const list = document.getElementById('list');
+  const empty = document.getElementById('empty');
+
+  if(filtered.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const grouped = {};
+  STAGE_ORDER.forEach(s => { grouped[s] = filtered.filter(m=>m.stage===s); });
+
+  let html = '';
+  STAGE_ORDER.forEach(s => {
+    const ms = grouped[s];
+    if(!ms || ms.length===0) return;
+    const color = STAGE_COLORS[s]||'#888';
+    html += `<div class="stage-header" style="color:${color}">
+      <div class="stage-dot"></div>
+      ${STAGE_LABELS[s]||s}
+      <span class="stage-count">${ms.length}試合</span>
+    </div>`;
+    ms.forEach(m => { html += matchCard(m); });
+  });
+
+  list.innerHTML = html;
+}
+
+// Team modal on chip click — show all matches for that team
+function showTeamModal(team) {
+  const ms = MATCHES.filter(m=>m.home===team||m.away===team);
+  document.getElementById('modalTitle').textContent = team + ' の全試合';
+  document.getElementById('modalSub').textContent = `${ms.length}試合`;
+  document.getElementById('modalMatches').innerHTML = ms.map(m=>matchCard(m,true)).join('');
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+document.getElementById('modal').addEventListener('click', e => {
+  if(e.target===document.getElementById('modal')) closeModal();
+});
+
+buildTeamChips();
+renderList();
+</script>
+</body>
+</html>
